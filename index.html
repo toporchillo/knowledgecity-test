@@ -1,0 +1,73 @@
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<a href="javascript:void(0);" id="logout">Logout</a>
+<h3>Students</h3>
+<div id="error" style="color:red;"></div>
+<div id="students">
+</div>
+<br>
+<div id="pagination">
+</div>
+</body>
+<script>
+const StorageToken = 'testask_token';
+$(document).ready(function() {
+    let token = window.sessionStorage.getItem(StorageToken);
+    if (!token) {
+        token = window.localStorage.getItem(StorageToken);
+        if (token) {
+            window.sessionStorage.setItem(StorageToken, token);
+        }
+    }
+    if (!token) {
+        document.location.href = 'login.html';
+        return false;
+    }
+    $('#logout').on('click', function() {
+        $.ajax({url: 'auth/?token='+token, type: 'DELETE', success: function(resp) {
+            window.sessionStorage.setItem(StorageToken, '');
+            window.localStorage.setItem(StorageToken, '');
+            document.location.href = 'login.html';
+            return false;
+        }});
+    })
+
+    let page = 1;
+    loadStudents(page);
+
+    $('#pagination').on('click', '.page', function () {
+        page = $(this).data('page');
+        loadStudents(page);
+    })
+
+    function loadStudents(page) {
+        $('#students').text('Loading...');
+        $('#pagination').text('');
+
+        $.get('users/?token=' + token + '&page=' + page, function (resp) {
+            if (resp.code == 403) {
+                document.location.href = 'login.html';
+                return false;
+            }
+            if (resp.code != 200) {
+                $('#error').text(resp.error);
+                return false;
+            }
+            $('#students').text('');
+            if (resp.list) {
+                for (let i = 0; i < resp.list.length; i++) {
+                    let user = resp.list[i];
+                    $('#students').append(user.name + '<br>');
+                }
+            }
+            for (let i = 1; i <= resp.pages; i++) {
+                $('#pagination').append('<a class="page" href="javascript:void(0);" data-page="' + i + '">' + i + '</a>&nbsp;&nbsp;&nbsp;');
+            }
+        })
+    }
+})
+</script>
+</html>

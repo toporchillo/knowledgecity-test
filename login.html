@@ -1,0 +1,38 @@
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<h3>Authorization</h3>
+<div id="error" style="color:red;"></div>
+<label for="password">Login: <input type="text" id="login" /></label><br>
+<label for="password">Password: <input type="password" id="password" /></label><br>
+<label for="remember"><input type="checkbox" id="remember" />Remember</label>
+<button id="auth_button">Sign in</button>
+<script>
+const StorageToken = 'testask_token';
+
+$('#auth_button').click(function () {
+    let login = $('#login').val();
+    let password = $('#password').val();
+    window.sessionStorage.setItem(StorageToken, '');
+    window.localStorage.setItem(StorageToken, '');
+
+    $.post('auth/', { login: login, password: password }, function(resp) {
+        if (resp.code != 200) {
+            $('#error').text(resp.error);
+            return false;
+        }
+        if (resp.user && resp.user.token) {
+            window.sessionStorage.setItem(StorageToken, resp.user.token);
+            if ($('#remember').is(':checked')) {
+                window.localStorage.setItem(StorageToken, resp.user.token);
+            }
+        }
+        document.location.href = 'index.html';
+        return true;
+    })
+})
+</script>
+</body>
+</html>
